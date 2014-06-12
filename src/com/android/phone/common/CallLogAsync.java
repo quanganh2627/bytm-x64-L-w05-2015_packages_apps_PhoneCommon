@@ -98,7 +98,44 @@ public class CallLogAsync {
             this.callType = callType;
             this.timestamp = timestamp;
             this.durationInSec = (int)(durationInMillis / 1000);
+            this.imsi = null;
         }
+
+        public AddCallArgs(Context context,
+                           CallerInfo ci,
+                           String number,
+                           int presentation,
+                           int callType,
+                           long timestamp,
+                           long durationInMillis,
+                           String imsi) {
+            // Note that the context is passed each time. We could
+            // have stored it in a member but we've run into a bunch
+            // of memory leaks in the past that resulted from storing
+            // references to contexts in places that were long lived
+            // when the contexts were expected to be short lived. For
+            // example, if you initialize this class with an Activity
+            // instead of an Application the Activity can't be GCed
+            // until this class can, and Activities tend to hold
+            // references to large amounts of RAM for things like the
+            // bitmaps in their views.
+            //
+            // Having hit more than a few of those bugs in the past
+            // we've grown cautious of storing references to Contexts
+            // when it's not very clear that the thing holding the
+            // references is tightly tied to the Context, for example
+            // Views the Activity is displaying.
+
+            this.context = context;
+            this.ci = ci;
+            this.number = number;
+            this.presentation = presentation;
+            this.callType = callType;
+            this.timestamp = timestamp;
+            this.durationInSec = (int)(durationInMillis / 1000);
+            this.imsi = imsi;
+        }
+
         // Since the members are accessed directly, we don't use the
         // mXxxx notation.
         public final Context context;
@@ -108,6 +145,7 @@ public class CallLogAsync {
         public final int callType;
         public final long timestamp;
         public final int durationInSec;
+        public final String imsi;
     }
 
     /**
@@ -162,7 +200,7 @@ public class CallLogAsync {
                     // May block.
                     result[i] = Calls.addCall(
                             c.ci, c.context, c.number, c.presentation,
-                            c.callType, c.timestamp, c.durationInSec);
+                            c.callType, c.timestamp, c.durationInSec, c.imsi);
                 } catch (Exception e) {
                     // This must be very rare but may happen in legitimate cases.
                     // e.g. If the phone is encrypted and thus write request fails, it may
